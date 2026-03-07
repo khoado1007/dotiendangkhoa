@@ -4,7 +4,7 @@ import Auth from './pages/Auth';
 import Home from './pages/Home';
 import Layout from './components/Layout';
 import Profile from './pages/Profile';
-import CompleteProfile from './pages/Completeprofile';
+import CompleteProfile from './pages/CompleteProfile';
 import TimetableEntry from './pages/TimetableEntry';
 import Settings from './pages/Setting';
 import Roadmap from './pages/Roadmap';
