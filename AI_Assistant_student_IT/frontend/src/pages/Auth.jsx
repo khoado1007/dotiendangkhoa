@@ -1,7 +1,27 @@
+/**
+ * =====================================================
+ * AUTH PAGE - Login/Register with Google Simulation
+ * =====================================================
+ * 
+ * API ENDPOINTS USED:
+ * -------------------
+ * 1. POST /api/auth/login        - Đăng nhập thủ công
+ * 2. POST /api/auth/register    - Đăng ký tài khoản mới
+ * 3. POST /api/auth/google      - Đăng nhập Google (MOCK/Simulation)
+ * 4. GET  /api/auth/validate/:id - Xác thực user sau OAuth
+ * 
+ * TEST CREDENTIALS:
+ * -----------------
+ * - Admin: username="admin", password="admin"
+ * - Student: Tạo tài khoản mới hoặc đăng ký
+ * 
+ * =====================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock, User as UserIcon, Mail, Chrome } from 'lucide-react';
+import { Lock, User as UserIcon, Mail, Chrome, Shield } from 'lucide-react';
 
 const Auth = () => {
   // Sử dụng biến môi trường hoặc mặc định là localhost
@@ -150,10 +170,44 @@ const Auth = () => {
 
         <button 
           type="button" onClick={handleGoogleAuth}
-          className="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all mb-6 shadow-sm active:scale-95"
+          className="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all mb-3 shadow-sm active:scale-95"
         >
           <Chrome className="w-5 h-5 text-red-500" />
           Tiếp tục với Gmail
+        </button>
+
+        {/* =====================================================
+          GOOGLE LOGIN BUTTON
+          Uses Google OAuth simulation
+          API: POST /api/auth/google
+          Creates new user with role: 'student'
+        ====================================================== */}
+        <button 
+          type="button" 
+          onClick={async () => {
+            try {
+              // Simulate Google user data
+              const mockGoogleUser = {
+                email: `student${Date.now()}@gmail.com`,
+                googleId: `google_${Date.now()}`,
+                displayName: 'Test Student'
+              };
+              
+              const res = await axios.post(`${API_URL}/api/auth/google`, mockGoogleUser);
+              
+              if (res.data.success) {
+                localStorage.setItem('user', JSON.stringify(res.data.user));
+                navigate('/home');
+              }
+            } catch (err) {
+              console.error('Google simulation error:', err);
+              setErrors({ general: 'Đăng nhập Google thất bại!' });
+            }
+          }}
+          className="w-full flex justify-center items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-3 rounded-lg font-medium hover:bg-blue-100 transition-all mb-6 shadow-sm active:scale-95"
+        >
+          <Chrome className="w-5 h-5 text-blue-500" />
+          Đăng nhập với Google
         </button>
 
         <div className="relative flex items-center justify-center mb-6">

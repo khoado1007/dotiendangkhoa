@@ -1,11 +1,38 @@
+/**
+ * =====================================================
+ * AUTH ROUTES - API Documentation for Developers
+ * =====================================================
+ * 
+ * Base URL: /api/auth
+ * 
+ * ENDPOINTS:
+ * -----------
+ * 1. POST /register     - Đăng ký tài khoản mới
+ * 2. POST /login        - Đăng nhập bằng username/email + password
+ * 3. POST /google       - Đăng nhập/đăng ký bằng Google (MOCK - for testing)
+ * 4. GET  /google/callback - OAuth callback từ Google
+ * 5. PUT  /update-profile/:id - Cập nhật hồ sơ sinh viên
+ * 6. GET  /student/:userId - Lấy thông tin sinh viên
+ * 7. GET  /settings/:id - Lấy cài đặt người dùng
+ * 8. PUT  /settings/:id - Cập nhật cài đặt người dùng
+ * 9. GET  /validate/:id - Xác thực user từ token/ID
+ * 
+ * =====================================================
+ */
+
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user'); // Lưu ý: Chữ U viết hoa cho đồng bộ
-const Student = require('../models/Students'); // Lưu ý: Bỏ chữ s dư ở model Students nếu cần
+const User = require('../models/user'); // Model User với các trường: username, email, password, googleId, role, isProfileComplete, settings
+const Student = require('../models/Students'); // Model Student lưu thông tin chi tiết: fullName, dob, enrollmentYear, schoolName, majorName
 const Major = require('../models/Major'); 
 const University = require('../models/University'); 
 
-// 1. API ĐĂNG KÝ
+// =====================================================
+// 1. API ĐĂNG KÝ TÀI KHOẢN MỚI
+// Method: POST
+// Body: { email, username, password }
+// Response: { success, message, user }
+// =====================================================
 router.post('/register', async (req, res) => {
   try {
     const { email, username, password } = req.body;
@@ -28,7 +55,13 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// 2. API ĐĂNG NHẬP THỦ CÔNG
+// =====================================================
+// 2. API ĐĂNG NHẬP THỦ CÔNG (Username/Email + Password)
+// Method: POST
+// Body: { username, password }
+// Response: { success, message, user }
+// Test credentials: admin/admin (role: 'admin')
+// =====================================================
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -48,8 +81,16 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 3. API ĐĂNG NHẬP GOOGLE (Mock - for testing)
-// Note: For production, use real Google OAuth via passport-google-oauth20
+// =====================================================
+// 3. API ĐĂNG NHẬP GOOGLE (SIMULATION - for testing only)
+// Method: POST
+// Body: { email, googleId, displayName }
+// Response: { success, message, user }
+// 
+// NOTE: Đây là mock - không cần Google API thực sự
+//       Sử dụng button "Google (Simulation)" để test
+//       User mới sẽ được tạo với role: 'student'
+// =====================================================
 router.post('/google', async (req, res) => {
   try {
     const { email, googleId, displayName } = req.body;

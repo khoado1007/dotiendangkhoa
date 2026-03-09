@@ -1,9 +1,33 @@
+/**
+ * =====================================================
+ * ADMIN ROUTES - API Documentation for Developers
+ * =====================================================
+ * 
+ * Base URL: /api/admin
+ * 
+ * ENDPOINTS:
+ * -----------
+ * 1. GET /dashboard-stats  - Lấy dữ liệu thống kê dashboard
+ * 
+ * NOTE: Cần kiểm tra user.role === 'admin' để bảo mật
+ * =====================================================
+ */
+
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const Student = require('../models/Students');
 
-// API lấy dữ liệu thống kê cho Dashboard
+// =====================================================
+// 1. API LẤY DỮ LIỆU THỐNG KÊ CHO DASHBOARD
+// Method: GET
+// Response: { success, data: { totalUsers, schoolStats, majorStats } }
+// 
+// NOTE: 
+// - totalUsers: Tổng số sinh viên (role: 'student')
+// - schoolStats: Thống kê theo trường (schoolName)
+// - majorStats: Thống kê theo ngành (majorName)
+// =====================================================
 router.get('/dashboard-stats', async (req, res) => {
   try {
     // 1. Lấy tổng số sinh viên (role: 'student')
