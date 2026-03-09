@@ -83,16 +83,23 @@ const Auth = () => {
 
   // Real Google OAuth login
   const handleGoogleAuth = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    
+    if (!clientId) {
+      setErrors({ general: 'Google Login chưa được cấu hình! Vui lòng đăng nhập bằng tài khoản thường bên dưới.' });
+      return;
+    }
+
     if (window.google && window.google.accounts && window.google.accounts.oauth2) {
       const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+        client_id: clientId,
         scope: 'profile email openid',
         callback: handleGoogleResponse,
       });
       client.requestAccessToken();
     } else {
       // Fallback: show setup instructions
-      setErrors({ general: 'Vui lòng cấu hình Google OAuth Client ID trong .env' });
+      setErrors({ general: 'Google OAuth chưa sẵn sàng! Vui lòng đăng nhập bằng tài khoản thường.' });
     }
   };
 
