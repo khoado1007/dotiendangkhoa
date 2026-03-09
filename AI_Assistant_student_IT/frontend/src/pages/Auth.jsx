@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, User as UserIcon, Mail, Chrome } from 'lucide-react';
 
 const Auth = () => {
@@ -8,6 +8,7 @@ const Auth = () => {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true); // Toggle Đăng nhập / Đăng ký
   
   const [formData, setFormData] = useState({
@@ -16,6 +17,84 @@ const Auth = () => {
     password: ''
   });
   const [errors, setErrors] = useState({});
+
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const googleAuth = searchParams.get('googleAuth');
+    const userId = searchParams.get('userId');
+    
+    if (googleAuth === 'success' && userId) {
+      // Fetch user data and save to localStorage
+      axios.get(`${API_URL}/api/auth/validate/${userId}`)
+        .then(res => {
+          if (res.data.success) {
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+            navigate('/home');
+          }
+        })
+        .catch(() => {
+          setErrors({ general: 'Đăng nhập Google thất bại!' });
+        });
+    } else if (googleAuth === 'error') {
+      setErrors({ general: 'Đăng nhập Google thất bại!' });
+    }
+  }, [searchParams, navigate, API_URL]);
+
+  // Initialize Google OAuth - load the script
+  useEffect(() => {
+    // Check if Google script is already loaded
+    if (!document.getElementById('google-identity-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-identity-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // Handle Google OAuth response
+  const handleGoogleResponse = async (response) => {
+    if (response.access_token) {
+      try {
+        // Get user info from Google using the access token
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${response.access_token}` }
+        });
+        const userInfo = await userInfoRes.json();
+        
+        // Send user info to backend to create/find user
+        const res = await axios.post(`${API_URL}/api/auth/google`, {
+          email: userInfo.email,
+          googleId: userInfo.sub,
+          displayName: userInfo.name
+        });
+        
+        if (res.data.success) {
+          localStorage.setItem('user', JSON.stringify(res.data.user));
+          navigate('/home');
+        }
+      } catch (err) {
+        console.error('Google auth error:', err);
+        setErrors({ general: 'Đăng nhập Google thất bại!' });
+      }
+    }
+  };
+
+  // Real Google OAuth login
+  const handleGoogleAuth = () => {
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+        scope: 'profile email openid',
+        callback: handleGoogleResponse,
+      });
+      client.requestAccessToken();
+    } else {
+      // Fallback: show setup instructions
+      setErrors({ general: 'Vui lòng cấu hình Google OAuth Client ID trong .env' });
+    }
+  };
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
@@ -42,28 +121,10 @@ const Auth = () => {
           navigate('/complete-profile');
         } else {
           navigate('/home');
-      } }
-    } catch (err) {
-      setErrors({ general: err.response?.data?.message || 'Lỗi kết nối máy chủ!' });
-    }
-  };
-
-  // Nút đăng nhập Google giả lập
-  const handleGoogleAuth = async () => {
-    try {
-      const mockGoogleData = {
-        email: 'sinhvien_it@stu.edu.vn',
-        displayName: 'Sinh Viên Google',
-        googleId: 'gg-123456789'
-      };
-      const res = await axios.post(`${API_URL}/api/auth/google`, mockGoogleData);
-      
-      if (res.data.success) {
-        localStorage.setItem('user', JSON.stringify(res.data.user));
-        navigate('/home');
+        }
       }
     } catch (err) {
-      setErrors({ general: 'Đăng nhập Google thất bại!' });
+      setErrors({ general: err.response?.data?.message || 'Lỗi kết nối máy chủ!' });
     }
   };
 

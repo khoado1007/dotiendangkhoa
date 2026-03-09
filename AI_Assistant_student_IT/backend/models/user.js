@@ -4,9 +4,10 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true }, 
   email: { type: String, required: true, unique: true },   
   password: { type: String, required: false },              
+  googleId: { type: String, unique: true, sparse: true },  // Added for Google OAuth
   
   // role đổi default thành 'student' cho khớp với file seed.js hôm trước
-  role: { type: String, enum: ['student', 'admin'], default: 'student' }, 
+  role: { type: String, enum: ['student', 'admin'], default: 'student' },
   
   isProfileComplete: { type: Boolean, default: false } ,
   settings: {

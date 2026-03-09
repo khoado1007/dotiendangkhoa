@@ -48,14 +48,15 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 3. API ĐĂNG NHẬP GOOGLE
+// 3. API ĐĂNG NHẬP GOOGLE (Mock - for testing)
+// Note: For production, use real Google OAuth via passport-google-oauth20
 router.post('/google', async (req, res) => {
   try {
-    const { email, googleId } = req.body;
+    const { email, googleId, displayName } = req.body;
     let user = await User.findOne({ email });
     
     if (!user) {
-      const baseUsername = email.split('@')[0];
+      const baseUsername = displayName || email.split('@')[0];
       user = new User({ 
         email: email, 
         username: baseUsername, 
@@ -68,6 +69,34 @@ router.post('/google', async (req, res) => {
     res.json({ success: true, message: 'Đăng nhập Google thành công!', user });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Lỗi server khi đăng nhập Google.' });
+  }
+});
+
+// 3a. Google OAuth callback (real implementation)
+router.get('/google/callback', async (req, res) => {
+  try {
+    // This endpoint is called by Google after authentication
+    // We'll redirect to frontend with user data
+    const { googleId, email, displayName } = req.query;
+    
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      const baseUsername = displayName || email.split('@')[0];
+      user = new User({ 
+        email: email, 
+        username: baseUsername, 
+        googleId: googleId,
+        role: 'student'
+      });
+      await user.save();
+    }
+
+    // Redirect to frontend with success
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/home?googleAuth=success&userId=${user._id}`);
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?googleAuth=error`);
   }
 });
 
