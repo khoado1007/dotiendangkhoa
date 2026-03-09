@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, AlertCircle, X, Info, PlusCircle, StickyNote, Edit, Trash2, Save } from 'lucide-react';
-import { getSchoolYear, formatDateForInput } from '../utils/timehelper';
+import { getSchoolYear, formatDateForInput, getCurrentSemester } from '../utils/timehelper';
 
 const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
 const SESSIONS = ['Sáng', 'Chiều', 'Tối'];
@@ -40,7 +40,7 @@ const TimetableEntry = () => {
   const [timetables, setTimetables] = useState([]);
   
   const [semesterConfig, setSemesterConfig] = useState(getFallbackSemesterConfig());
-  const [selectedSemester, setSelectedSemester] = useState('1'); 
+  const [selectedSemester, setSelectedSemester] = useState(getCurrentSemester());
   const [semesterStart, setSemesterStart] = useState('');
   const [semesterEnd, setSemesterEnd] = useState('');
 
@@ -81,8 +81,12 @@ const TimetableEntry = () => {
       }
       setSemesterConfig(config);
       
-      const initialStart = config['1'].start;
-      const initialEnd = config['1'].end;
+      // Lấy học kỳ hiện tại để set ngày mặc định
+      const currentSem = getCurrentSemester();
+      setSelectedSemester(currentSem);
+      
+      const initialStart = config[currentSem]?.start || config['1'].start;
+      const initialEnd = config[currentSem]?.end || config['1'].end;
       setSemesterStart(initialStart);
       setSemesterEnd(initialEnd);
       setFormData(prev => ({ ...prev, startDate: initialStart, endDate: initialEnd }));
@@ -174,6 +178,8 @@ const TimetableEntry = () => {
         setSuccess(editingId ? 'Đã cập nhật môn học!' : 'Đã thêm môn học!');
         const updatedTimetables = await axios.get(`http://localhost:5000/api/timetable/${user._id}`);
         setTimetables(updatedTimetables.data.data);
+        // Sync with Home page - save timestamp
+        localStorage.setItem('timetableUpdated', Date.now().toString());
         handleCancelEdit();
       }
     } catch (err) {
@@ -194,6 +200,8 @@ const TimetableEntry = () => {
       
       const updatedTimetables = await axios.get(`http://localhost:5000/api/timetable/${user._id}`);
       setTimetables(updatedTimetables.data.data);
+      // Sync with Home page - save timestamp
+      localStorage.setItem('timetableUpdated', Date.now().toString());
       setNoteModal({ isOpen: false, day: '', session: '', startPeriod: null, content: '', noteId: null });
     } catch (err) { alert("Lỗi khi lưu ghi chú!"); }
   };
@@ -212,6 +220,8 @@ const TimetableEntry = () => {
       }
       const updatedTimetables = await axios.get(`http://localhost:5000/api/timetable/${user._id}`);
       setTimetables(updatedTimetables.data.data);
+      // Sync with Home page - save timestamp
+      localStorage.setItem('timetableUpdated', Date.now().toString());
       
       if (isNoteType) setNoteModal({ isOpen: false, day: '', session: '', startPeriod: null, content: '', noteId: null });
       else setDetailModal({ isOpen: false, data: null });

@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, Info, Edit, StickyNote, X, PartyPopper, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { 
   getSchoolYear, calculateTotalWeeks, getWeekDateRange, 
-  isSubjectActiveInWeek, isNoteInViewedWeek, isSubjectActive, formatDateForInput 
+  isSubjectActiveInWeek, isNoteInViewedWeek, isSubjectActive, formatDateForInput,
+  getCurrentSemester, getCurrentWeek
 } from '../utils/timehelper';
 
 const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
@@ -92,7 +93,31 @@ const Home = () => {
     fetchData(parsedUser._id);
   }, [navigate]);
 
-  const fetchData = async (userId) => {
+  // Check for timetable updates from TimetableEntry page
+  useEffect(() => {
+    const checkForUpdates = () => {
+      const updatedTimestamp = localStorage.getItem('timetableUpdated');
+      const lastFetched = localStorage.getItem('timetableLastFetched');
+      
+      if (updatedTimestamp && user?._id) {
+        // If there's a newer update than last fetch, refetch
+        if (!lastFetched || parseInt(updatedTimestamp) > parseInt(lastFetched)) {
+          fetchData(user._id);
+          localStorage.setItem('timetableLastFetched', updatedTimestamp);
+          // Clear the update flag
+          localStorage.removeItem('timetableUpdated');
+        }
+      }
+    };
+
+    checkForUpdates();
+    
+    // Also check periodically when component is active (every 5 seconds)
+    const interval = setInterval(checkForUpdates, 5000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+const fetchData = async (userId) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const [profileRes, timetableRes, settingsRes] = await Promise.all([
@@ -113,10 +138,15 @@ const Home = () => {
       }
       setSemesterConfig(config);
 
-      const currentSem = getCurrentSemesterKey(config);
+      // Use unified getCurrentSemester from timehelper to detect current semester
+      const currentSem = getCurrentSemester(config);
       setSelectedSemester(currentSem);
       setSemesterStart(config[currentSem].start);
       setSemesterEnd(config[currentSem].end);
+
+      // Calculate and set the current week based on today's date
+      const currentWeek = getCurrentWeek(config[currentSem].start);
+      setSelectedWeek(currentWeek);
 
     } catch (err) {
       console.error("Lỗi:", err);

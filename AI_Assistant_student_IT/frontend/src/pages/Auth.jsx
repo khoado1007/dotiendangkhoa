@@ -1,14 +1,13 @@
 /**
  * =====================================================
- * AUTH PAGE - Login/Register with Google Simulation
+ * AUTH PAGE - Login/Register
  * =====================================================
  * 
  * API ENDPOINTS USED:
  * -------------------
  * 1. POST /api/auth/login        - Đăng nhập thủ công
  * 2. POST /api/auth/register    - Đăng ký tài khoản mới
- * 3. POST /api/auth/google      - Đăng nhập Google (MOCK/Simulation)
- * 4. GET  /api/auth/validate/:id - Xác thực user sau OAuth
+ * 3. GET  /api/auth/validate/:id - Xác thực user
  * 
  * TEST CREDENTIALS:
  * -----------------
@@ -18,17 +17,16 @@
  * =====================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock, User as UserIcon, Mail, Chrome, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Lock, User as UserIcon, Mail } from 'lucide-react';
 
 const Auth = () => {
   // Sử dụng biến môi trường hoặc mặc định là localhost
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true); // Toggle Đăng nhập / Đăng ký
   
   const [formData, setFormData] = useState({
@@ -37,91 +35,6 @@ const Auth = () => {
     password: ''
   });
   const [errors, setErrors] = useState({});
-
-  // Handle Google OAuth callback
-  useEffect(() => {
-    const googleAuth = searchParams.get('googleAuth');
-    const userId = searchParams.get('userId');
-    
-    if (googleAuth === 'success' && userId) {
-      // Fetch user data and save to localStorage
-      axios.get(`${API_URL}/api/auth/validate/${userId}`)
-        .then(res => {
-          if (res.data.success) {
-            localStorage.setItem('user', JSON.stringify(res.data.user));
-            navigate('/home');
-          }
-        })
-        .catch(() => {
-          setErrors({ general: 'Đăng nhập Google thất bại!' });
-        });
-    } else if (googleAuth === 'error') {
-      setErrors({ general: 'Đăng nhập Google thất bại!' });
-    }
-  }, [searchParams, navigate, API_URL]);
-
-  // Initialize Google OAuth - load the script
-  useEffect(() => {
-    // Check if Google script is already loaded
-    if (!document.getElementById('google-identity-script')) {
-      const script = document.createElement('script');
-      script.id = 'google-identity-script';
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-    }
-  }, []);
-
-  // Handle Google OAuth response
-  const handleGoogleResponse = async (response) => {
-    if (response.access_token) {
-      try {
-        // Get user info from Google using the access token
-        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${response.access_token}` }
-        });
-        const userInfo = await userInfoRes.json();
-        
-        // Send user info to backend to create/find user
-        const res = await axios.post(`${API_URL}/api/auth/google`, {
-          email: userInfo.email,
-          googleId: userInfo.sub,
-          displayName: userInfo.name
-        });
-        
-        if (res.data.success) {
-          localStorage.setItem('user', JSON.stringify(res.data.user));
-          navigate('/home');
-        }
-      } catch (err) {
-        console.error('Google auth error:', err);
-        setErrors({ general: 'Đăng nhập Google thất bại!' });
-      }
-    }
-  };
-
-  // Real Google OAuth login
-  const handleGoogleAuth = () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    
-    if (!clientId) {
-      setErrors({ general: 'Google Login chưa được cấu hình! Vui lòng đăng nhập bằng tài khoản thường bên dưới.' });
-      return;
-    }
-
-    if (window.google && window.google.accounts && window.google.accounts.oauth2) {
-      const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: 'profile email openid',
-        callback: handleGoogleResponse,
-      });
-      client.requestAccessToken();
-    } else {
-      // Fallback: show setup instructions
-      setErrors({ general: 'Google OAuth chưa sẵn sàng! Vui lòng đăng nhập bằng tài khoản thường.' });
-    }
-  };
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
@@ -167,53 +80,6 @@ const Auth = () => {
             {errors.general}
           </div>
         )}
-
-        <button 
-          type="button" onClick={handleGoogleAuth}
-          className="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all mb-3 shadow-sm active:scale-95"
-        >
-          <Chrome className="w-5 h-5 text-red-500" />
-          Tiếp tục với Gmail
-        </button>
-
-        {/* =====================================================
-          GOOGLE LOGIN BUTTON
-          Uses Google OAuth simulation
-          API: POST /api/auth/google
-          Creates new user with role: 'student'
-        ====================================================== */}
-        <button 
-          type="button" 
-          onClick={async () => {
-            try {
-              // Simulate Google user data
-              const mockGoogleUser = {
-                email: `student${Date.now()}@gmail.com`,
-                googleId: `google_${Date.now()}`,
-                displayName: 'Test Student'
-              };
-              
-              const res = await axios.post(`${API_URL}/api/auth/google`, mockGoogleUser);
-              
-              if (res.data.success) {
-                localStorage.setItem('user', JSON.stringify(res.data.user));
-                navigate('/home');
-              }
-            } catch (err) {
-              console.error('Google simulation error:', err);
-              setErrors({ general: 'Đăng nhập Google thất bại!' });
-            }
-          }}
-          className="w-full flex justify-center items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-3 rounded-lg font-medium hover:bg-blue-100 transition-all mb-6 shadow-sm active:scale-95"
-        >
-          <Chrome className="w-5 h-5 text-blue-500" />
-          Đăng nhập với Google
-        </button>
-
-        <div className="relative flex items-center justify-center mb-6">
-          <span className="absolute bg-white px-3 text-xs text-gray-400 font-semibold uppercase">Hoặc</span>
-          <div className="w-full h-px bg-gray-200"></div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (

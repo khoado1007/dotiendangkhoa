@@ -66,3 +66,64 @@ export const formatDateForInput = (dateValue) => {
   const year = d.getFullYear();
   return `${year}-${month}-${day}`;
 };
+
+/**
+ * Get current semester based on today's date and semester config
+ * @param {Object} config - Semester configuration object with keys '1', '2', 'he'
+ * @returns {string} - Current semester key: '1', '2', or 'he'
+ */
+export const getCurrentSemester = (config) => {
+  if (!config) {
+    // Fallback to default config if none provided
+    const year = new Date().getFullYear();
+    config = {
+      '1': { start: `${year}-09-05`, end: `${year + 1}-01-15` },
+      '2': { start: `${year + 1}-02-15`, end: `${year + 1}-06-30` },
+      'he': { start: `${year + 1}-07-05`, end: `${year + 1}-08-30` }
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (const [key, value] of Object.entries(config)) {
+    if (value.start && value.end) {
+      const start = new Date(value.start);
+      const end = new Date(value.end);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      
+      if (today >= start && today <= end) {
+        return key;
+      }
+    }
+  }
+  
+  // Default to semester 1 if not in any semester
+  return '1';
+};
+
+/**
+ * Get the current week number within a semester
+ * @param {string} semesterStart - Start date of semester (YYYY-MM-DD)
+ * @returns {number} - Current week number
+ */
+export const getCurrentWeek = (semesterStart) => {
+  if (!semesterStart) return 1;
+  
+  const start = new Date(semesterStart);
+  const today = new Date();
+  
+  if (isNaN(start.getTime()) || isNaN(today.getTime())) return 1;
+  
+  start.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  const diffTime = today - start;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return 1;
+  
+  const week = Math.floor(diffDays / 7) + 1;
+  return week < 1 ? 1 : week;
+};

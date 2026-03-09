@@ -9,23 +9,21 @@
  * -----------
  * 1. POST /register     - Đăng ký tài khoản mới
  * 2. POST /login        - Đăng nhập bằng username/email + password
- * 3. POST /google       - Đăng nhập/đăng ký bằng Google (MOCK - for testing)
- * 4. GET  /google/callback - OAuth callback từ Google
- * 5. PUT  /update-profile/:id - Cập nhật hồ sơ sinh viên
- * 6. GET  /student/:userId - Lấy thông tin sinh viên
- * 7. GET  /settings/:id - Lấy cài đặt người dùng
- * 8. PUT  /settings/:id - Cập nhật cài đặt người dùng
- * 9. GET  /validate/:id - Xác thực user từ token/ID
+ * 3. PUT  /update-profile/:id - Cập nhật hồ sơ sinh viên
+ * 4. GET  /student/:userId - Lấy thông tin sinh viên
+ * 5. GET  /settings/:id - Lấy cài đặt người dùng
+ * 6. PUT  /settings/:id - Cập nhật cài đặt người dùng
+ * 7. GET  /validate/:id - Xác thực user từ token/ID
  * 
  * =====================================================
  */
 
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user'); // Model User với các trường: username, email, password, googleId, role, isProfileComplete, settings
+const User = require('../models/user'); // Model User với các trường: username, email, password, role, isProfileComplete, settings
 const Student = require('../models/Students'); // Model Student lưu thông tin chi tiết: fullName, dob, enrollmentYear, schoolName, majorName
 const Major = require('../models/Major'); 
-const University = require('../models/University'); 
+const University = require('../models/University');
 
 // =====================================================
 // 1. API ĐĂNG KÝ TÀI KHOẢN MỚI
@@ -82,66 +80,7 @@ router.post('/login', async (req, res) => {
 });
 
 // =====================================================
-// 3. API ĐĂNG NHẬP GOOGLE (SIMULATION - for testing only)
-// Method: POST
-// Body: { email, googleId, displayName }
-// Response: { success, message, user }
-// 
-// NOTE: Đây là mock - không cần Google API thực sự
-//       Sử dụng button "Google (Simulation)" để test
-//       User mới sẽ được tạo với role: 'student'
-// =====================================================
-router.post('/google', async (req, res) => {
-  try {
-    const { email, googleId, displayName } = req.body;
-    let user = await User.findOne({ email });
-    
-    if (!user) {
-      const baseUsername = displayName || email.split('@')[0];
-      user = new User({ 
-        email: email, 
-        username: baseUsername, 
-        googleId: googleId,
-        role: 'student'
-      });
-      await user.save();
-    }
-
-    res.json({ success: true, message: 'Đăng nhập Google thành công!', user });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Lỗi server khi đăng nhập Google.' });
-  }
-});
-
-// 3a. Google OAuth callback (real implementation)
-router.get('/google/callback', async (req, res) => {
-  try {
-    // This endpoint is called by Google after authentication
-    // We'll redirect to frontend with user data
-    const { googleId, email, displayName } = req.query;
-    
-    let user = await User.findOne({ email });
-    
-    if (!user) {
-      const baseUsername = displayName || email.split('@')[0];
-      user = new User({ 
-        email: email, 
-        username: baseUsername, 
-        googleId: googleId,
-        role: 'student'
-      });
-      await user.save();
-    }
-
-    // Redirect to frontend with success
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/home?googleAuth=success&userId=${user._id}`);
-  } catch (error) {
-    console.error('Google OAuth error:', error);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?googleAuth=error`);
-  }
-});
-
-// 4. API CẬP NHẬT HỒ SƠ (Bao gồm Cấu hình giờ học ban đầu)
+// 3. API CẬP NHẬT HỒ SƠ (Bao gồm Cấu hình giờ học ban đầu)
 router.put('/update-profile/:id', async (req, res) => {
   try {
     const userId = req.params.id;
@@ -192,7 +131,7 @@ router.put('/update-profile/:id', async (req, res) => {
   }
 });
 
-// 5. API LẤY THÔNG TIN SINH VIÊN
+// 4. API LẤY THÔNG TIN SINH VIÊN
 router.get('/student/:userId', async (req, res) => {
   try {
     const student = await Student.findOne({ userId: req.params.userId });
@@ -205,7 +144,7 @@ router.get('/student/:userId', async (req, res) => {
   }
 });
 
-// 6. API LẤY CÀI ĐẶT
+// 5. API LẤY CÀI ĐẶT
 router.get('/settings/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -216,7 +155,7 @@ router.get('/settings/:id', async (req, res) => {
   }
 });
 
-// 7. API CẬP NHẬT CÀI ĐẶT (Tại trang Settings)
+// 6. API CẬP NHẬT CÀI ĐẶT (Tại trang Settings)
 router.put('/settings/:id', async (req, res) => {
   try {
     // Thêm semesterConfig vào danh sách lấy từ req.body
@@ -240,7 +179,7 @@ router.put('/settings/:id', async (req, res) => {
   }
 });
 
-// 8. API XÁC THỰC USER (Kiểm tra user có tồn tại trong DB không)
+// 7. API XÁC THỰC USER (Kiểm tra user có tồn tại trong DB không)
 router.get('/validate/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
