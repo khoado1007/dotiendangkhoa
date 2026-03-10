@@ -120,9 +120,10 @@ const Home = () => {
 const fetchData = async (userId) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const [profileRes, timetableRes, settingsRes] = await Promise.all([
+      const [profileRes, timetableRes, semesterRes, settingsRes] = await Promise.all([
         axios.get(`${apiUrl}/api/auth/student/${userId}`),
         axios.get(`${apiUrl}/api/timetable/${userId}`),
+        axios.get(`${apiUrl}/api/semester/${userId}`),
         axios.get(`${apiUrl}/api/auth/settings/${userId}`)
       ]);
       
@@ -130,6 +131,18 @@ const fetchData = async (userId) => {
       if (timetableRes.data.success) setTimetables(timetableRes.data.data);
       
       let config = getFallbackConfig();
+      
+      // Use new semester collection first
+      if (semesterRes.data.success && semesterRes.data.data) {
+        const sem = semesterRes.data.data;
+        config = {
+          '1': { start: sem.semester1_start || config['1'].start, end: sem.semester1_end || config['1'].end },
+          '2': { start: sem.semester2_start || config['2'].start, end: sem.semester2_end || config['2'].end },
+          'he': { start: sem.semester_he_start || config['he'].start, end: sem.semester_he_end || config['he'].end }
+        };
+      }
+      
+      // Fallback to settings semesterConfig if exists
       if (settingsRes.data.success && settingsRes.data.settings) {
         setSettings(settingsRes.data.settings);
         if (settingsRes.data.settings.semesterConfig) {

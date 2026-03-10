@@ -5,6 +5,7 @@ import { Settings as SettingsIcon, Clock, Save, User, Coffee, Info } from 'lucid
 
 const Settings = () => {
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,8 +30,8 @@ const Settings = () => {
     const fetchData = async () => {
       try {
         const [profileRes, settingsRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/auth/student/${parsedUser._id}`),
-          axios.get(`http://localhost:5000/api/auth/settings/${parsedUser._id}`)
+          axios.get(`${API_URL}/api/auth/student/${parsedUser._id}`),
+          axios.get(`${API_URL}/api/auth/settings/${parsedUser._id}`)
         ]);
         
         if (profileRes.data.success) setProfile(profileRes.data.student);
@@ -52,7 +53,7 @@ const Settings = () => {
     e.preventDefault();
     setMessage('');
     try {
-      const res = await axios.put(`http://localhost:5000/api/auth/settings/${user._id}`, settings);
+      const res = await axios.put(`${API_URL}/api/auth/settings/${user._id}`, settings);
       
       if (res.data.success) {
         setMessage('✅ Cấu hình hệ thống đã được đồng bộ!');

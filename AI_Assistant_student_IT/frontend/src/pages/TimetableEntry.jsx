@@ -36,6 +36,7 @@ const getFallbackSemesterConfig = () => {
 
 const TimetableEntry = () => {
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const [user, setUser] = useState(null);
   const [timetables, setTimetables] = useState([]);
   
@@ -68,25 +69,39 @@ const TimetableEntry = () => {
 
   const fetchData = async (userId) => {
     try {
-      const [timetableRes, settingsRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/timetable/${userId}`),
-        axios.get(`http://localhost:5000/api/auth/settings/${userId}`)
+      const [timetableRes, semesterRes, settingsRes] = await Promise.all([
+        axios.get(`${API_URL}/api/timetable/${userId}`),
+        axios.get(`${API_URL}/api/semester/${userId}`),
+        axios.get(`${API_URL}/api/auth/settings/${userId}`)
       ]);
       
       if (timetableRes.data.success) setTimetables(timetableRes.data.data);
       
       let config = getFallbackSemesterConfig();
+      
+      // Use new semester collection
+      if (semesterRes.data.success && semesterRes.data.data) {
+        const sem = semesterRes.data.data;
+        config = {
+          '1': { start: sem.semester1_start || config['1'].start, end: sem.semester1_end || config['1'].end },
+          '2': { start: sem.semester2_start || config['2'].start, end: sem.semester2_end || config['2'].end },
+          'he': { start: sem.semester_he_start || config['he'].start, end: sem.semester_he_end || config['he'].end }
+        };
+      }
+      
+      // Fallback to settings semesterConfig if exists
       if (settingsRes.data.success && settingsRes.data.settings?.semesterConfig) {
         config = settingsRes.data.settings.semesterConfig;
       }
+      
       setSemesterConfig(config);
       
-      // Lấy học kỳ hiện tại để set ngày mặc định
-      const currentSem = getCurrentSemester();
+      // Lấy học kỳ hiện tại dựa trên config của người dùng
+      const currentSem = getCurrentSemester(config);
       setSelectedSemester(currentSem);
       
-      const initialStart = config[currentSem]?.start || config['1'].start;
-      const initialEnd = config[currentSem]?.end || config['1'].end;
+      const initialStart = config[currentSem]?.start || config[currentSem].start;
+      const initialEnd = config[currentSem]?.end || config[currentSem].end;
       setSemesterStart(initialStart);
       setSemesterEnd(initialEnd);
       setFormData(prev => ({ ...prev, startDate: initialStart, endDate: initialEnd }));
@@ -102,13 +117,31 @@ const TimetableEntry = () => {
       return;
     }
     try {
+      // Build payload for new semester collection
+      const semesterPayload = {
+        userId: user._id,
+        semester1_start: semesterConfig['1']?.start || '',
+        semester1_end: semesterConfig['1']?.end || '',
+        semester2_start: semesterConfig['2']?.start || '',
+        semester2_end: semesterConfig['2']?.end || '',
+        semester_he_start: semesterConfig['he']?.start || '',
+        semester_he_end: semesterConfig['he']?.end || ''
+      };
+
+      // Save to new semester collection (create if null, update if exists)
+      await axios.post(`${API_URL}/api/semester/${user._id}`, semesterPayload);
+      
+      // Also save to settings for backward compatibility
       const currentSettings = JSON.parse(localStorage.getItem('user'))?.settings || {};
       const payload = { ...currentSettings, semesterConfig };
-      await axios.put(`http://localhost:5000/api/auth/settings/${user._id}`, payload);
+      await axios.put(`${API_URL}/api/auth/settings/${user._id}`, payload);
+      
       const updatedUser = { ...user, settings: payload };
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      
       alert('Đã lưu Cấu hình Khung thời gian Học kỳ thành công!');
     } catch (err) {
+      console.error("Lỗi khi lưu semester config:", err);
       alert('Lỗi khi lưu cấu hình Học kỳ vào Server!');
     }
   };
@@ -169,14 +202,14 @@ const TimetableEntry = () => {
       const payload = { ...formData, isNote: false, semester: selectedSemester, userId: user._id };
       let res;
       if (editingId) {
-        res = await axios.put(`http://localhost:5000/api/timetable/update/${editingId}`, payload);
+        res = await axios.put(`${API_URL}/api/timetable/update/${editingId}`, payload);
       } else {
-        res = await axios.post('http://localhost:5000/api/timetable/add', payload);
+        res = await axios.post(`${API_URL}/api/timetable/add`, payload);
       }
 
       if (res.data.success) {
         setSuccess(editingId ? 'Đã cập nhật môn học!' : 'Đã thêm môn học!');
-        const updatedTimetables = await axios.get(`http://localhost:5000/api/timetable/${user._id}`);
+        const updatedTimetables = await axios.get(`${API_URL}/api/timetable/${user._id}`);
         setTimetables(updatedTimetables.data.data);
         // Sync with Home page - save timestamp
         localStorage.setItem('timetableUpdated', Date.now().toString());
@@ -195,10 +228,10 @@ const TimetableEntry = () => {
         dayOfWeek: noteModal.day, startPeriod: noteModal.startPeriod, numberOfPeriods: 1, 
         isTemporary: noteModal.session === 'Tối', semester: selectedSemester, userId: user._id 
       };
-      if (noteModal.noteId) await axios.put(`http://localhost:5000/api/timetable/update/${noteModal.noteId}`, payload);
-      else await axios.post('http://localhost:5000/api/timetable/add', payload);
+      if (noteModal.noteId) await axios.put(`${API_URL}/api/timetable/update/${noteModal.noteId}`, payload);
+      else await axios.post(`${API_URL}/api/timetable/add`, payload);
       
-      const updatedTimetables = await axios.get(`http://localhost:5000/api/timetable/${user._id}`);
+      const updatedTimetables = await axios.get(`${API_URL}/api/timetable/${user._id}`);
       setTimetables(updatedTimetables.data.data);
       // Sync with Home page - save timestamp
       localStorage.setItem('timetableUpdated', Date.now().toString());
@@ -211,14 +244,14 @@ const TimetableEntry = () => {
     try {
 
       const itemToDelete = timetables.find(t => t._id === id);
-      await axios.delete(`http://localhost:5000/api/timetable/delete/${id}`);
+      await axios.delete(`${API_URL}/api/timetable/delete/${id}`);
       //  Xóa Roadmap của môn đó khỏi DB
       if (itemToDelete && !isNoteType) {
         try {
-          await axios.delete(`http://localhost:5000/api/roadmap/${user._id}/${itemToDelete.semester}/${itemToDelete.subjectName}`);
+          await axios.delete(`${API_URL}/api/roadmap/${user._id}/${itemToDelete.semester}/${itemToDelete.subjectName}`);
         } catch (e) { console.log("Không có roadmap để xóa"); }
       }
-      const updatedTimetables = await axios.get(`http://localhost:5000/api/timetable/${user._id}`);
+      const updatedTimetables = await axios.get(`${API_URL}/api/timetable/${user._id}`);
       setTimetables(updatedTimetables.data.data);
       // Sync with Home page - save timestamp
       localStorage.setItem('timetableUpdated', Date.now().toString());

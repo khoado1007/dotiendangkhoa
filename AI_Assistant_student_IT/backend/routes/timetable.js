@@ -76,7 +76,7 @@ router.put('/update/:id', async (req, res) => {
     }
 
     // Tiến hành cập nhật
-    const updatedSchedule = await Timetable.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedSchedule = await Timetable.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
     res.json({ success: true, message: 'Cập nhật thành công!', data: updatedSchedule });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật.' });

@@ -50,14 +50,14 @@ function App() {
           <Route path="complete-profile" element={<CompleteProfile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="roadmap" element={<Roadmap />} />
+          
+          {/* =====================================================
+            ADMIN ROUTE - For Testing
+            Requires: user.role === 'admin'
+            API: GET /api/admin/dashboard-stats
+          ====================================================== */}
+          <Route path="admin" element={<Admin />} />
         </Route>
-        
-        {/* =====================================================
-          ADMIN ROUTE - For Testing
-          Requires: user.role === 'admin'
-          API: GET /api/admin/dashboard-stats
-        ====================================================== */}
-        <Route path="/admin" element={<Admin />} />
       </Routes>
     </Router>
   );

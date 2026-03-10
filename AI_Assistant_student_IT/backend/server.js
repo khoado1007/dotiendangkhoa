@@ -18,6 +18,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/timetable', require('./routes/timetable')); //lấy API lichj học
 const roadmapRoute = require('./routes/roadmap');
 app.use('/api/roadmap', roadmapRoute);
+const semesterRoute = require('./routes/semester');
+app.use('/api/semester', semesterRoute);
 // Lấy cổng và chuỗi kết nối từ file .env
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;

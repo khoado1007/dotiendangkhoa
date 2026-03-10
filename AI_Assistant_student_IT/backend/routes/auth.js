@@ -194,4 +194,37 @@ router.get('/validate/:id', async (req, res) => {
     res.status(500).json({ success: false, message: 'Lỗi server' });
   }
 });
+
+// =====================================================
+// 8. API TÌM KIẾM TRƯỜNG ĐẠI HỌC VIỆT NAM (Sử dụng API công khai)
+router.get('/search-universities', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.length < 2) {
+      return res.json({ success: true, universities: [] });
+    }
+
+    // Sử dụng API công khai của Hipolabs
+    const response = await fetch(
+      `https://universities.hipolabs.com/search?country=Vietnam&name=${encodeURIComponent(query)}`
+    );
+    
+    const data = await response.json();
+    
+    // Format lại dữ liệu trả về
+    const universities = data.map(uni => ({
+      name: uni.name,
+      code: uni.domains?.[0] || '',
+      country: uni.country,
+      web_pages: uni.web_pages?.[0] || ''
+    }));
+
+    res.json({ success: true, universities });
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm trường đại học:", error);
+    res.status(500).json({ success: false, message: 'Lỗi khi tìm kiếm trường đại học' });
+  }
+});
+
 module.exports = router;
