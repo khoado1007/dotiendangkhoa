@@ -34,6 +34,8 @@ import CompleteProfile from './pages/CompleteProfile';
 import TimetableEntry from './pages/TimetableEntry';
 import Settings from './pages/Setting';
 import Roadmap from './pages/Roadmap';
+import Practice from './pages/Practice';
+import Study from './pages/Study';
 import Admin from './pages/Admin';
 
 function App() {
@@ -49,7 +51,10 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="complete-profile" element={<CompleteProfile />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="roadmap" element={<Roadmap />} />
+<Route path="roadmap" element={<Roadmap />} />
+<Route path="practice" element={<Practice />} />
+          <Route path="practice/:mode" element={<Practice />} />
+          <Route path="study" element={<Study />} />
           
           {/* =====================================================
             ADMIN ROUTE - For Testing

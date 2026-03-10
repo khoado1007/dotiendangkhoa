@@ -1,18 +1,31 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-// Đã thêm SettingsIcon, Map (cho Lộ trình) và useNavigate
-import { Home, Calendar, Map, Dumbbell, BookOpen, User, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import { Home, Calendar, Map, Dumbbell, BookOpen, User, Settings as SettingsIcon, LogOut, ChevronDown, FileText, ClipboardCheck } from 'lucide-react';
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [practiceOpen, setPracticeOpen] = useState(false);
 
   // Danh sách các menu điều hướng đã được cập nhật đầy đủ
   const menuItems = [
     { path: '/home', name: 'Trang chủ', icon: Home },
     { path: '/timetable-entry', name: 'Quản lý lịch học', icon: Calendar },
     { path: '/roadmap', name: 'Lộ trình AI', icon: Map },
-    { path: '/practice', name: 'Luyện tập', icon: Dumbbell },
+  ];
+
+  // Menu dropdown Luyện tập
+  const practiceMenu = {
+    name: 'Luyện tập',
+    icon: Dumbbell,
+    children: [
+      { path: '/practice', name: 'Bài tập', icon: FileText },
+      { path: '/practice/exam', name: 'Kiểm tra', icon: ClipboardCheck },
+    ]
+  };
+
+  const remainingItems = [
     { path: '/study', name: 'Tài liệu học', icon: BookOpen },
     { path: '/profile', name: 'Hồ sơ', icon: User },
     { path: '/settings', name: 'Cài đặt', icon: SettingsIcon },
@@ -40,10 +53,78 @@ const Layout = () => {
         </div>
         
         {/* Các nút Menu */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+          {/* Main menu items */}
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname.includes(item.path);
+            const isActive = location.pathname === item.path || (item.path !== '/home' && location.pathname.startsWith(item.path));
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-blue-50 text-blue-600 font-bold shadow-sm' 
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-blue-600 font-medium'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                {item.name}
+              </Link>
+            );
+          })}
+
+          {/* Dropdown Luyện tập */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setPracticeOpen(true)}
+            onMouseLeave={() => setPracticeOpen(false)}
+          >
+            <button
+              className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                location.pathname.startsWith('/practice')
+                  ? 'bg-blue-50 text-blue-600 font-bold shadow-sm' 
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-blue-600 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <practiceMenu.icon className={`w-5 h-5 ${location.pathname.startsWith('/practice') ? 'text-blue-600' : 'text-gray-400'}`} />
+                {practiceMenu.name}
+              </div>
+              <ChevronDown className={`w-4 h-4 transition-transform ${practiceOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {/* Dropdown content */}
+            {practiceOpen && (
+              <div className="ml-4 mt-1 space-y-1 bg-gray-50 rounded-lg py-2">
+                {practiceMenu.children.map((child) => {
+                  const Icon = child.icon;
+                  const isActive = location.pathname === child.path;
+                  
+                  return (
+                    <Link
+                      key={child.path}
+                      to={child.path}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                        isActive 
+                          ? 'bg-blue-100 text-blue-700 font-bold' 
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600 font-medium text-sm'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                      {child.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Remaining menu items */}
+          {remainingItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path || (item.path !== '/home' && location.pathname.startsWith(item.path));
             
             return (
               <Link
@@ -62,7 +143,7 @@ const Layout = () => {
           })}
         </nav>
 
-        {/* Nút Đăng xuất ở cuối Sidebar (Đã đổi thành button) */}
+        {/* Nút Đăng xuất ở cuối Sidebar */}
         <div className="p-4 border-t border-gray-100">
           <button 
             onClick={handleLogout}
@@ -76,7 +157,6 @@ const Layout = () => {
 
       {/* Khu vực Nội dung chính (Bên phải) */}
       <div className="flex-1 overflow-y-auto relative bg-gray-50/50">
-        {/* Nơi này sẽ hiển thị trang Home, Timetable, Profile... tùy vào URL */}
         <Outlet /> 
       </div>
       
@@ -85,3 +165,4 @@ const Layout = () => {
 };
 
 export default Layout;
+

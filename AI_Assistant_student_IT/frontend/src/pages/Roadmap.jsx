@@ -5,7 +5,7 @@ import {
   Sparkles, BookOpen, AlertTriangle, CheckCircle2, Circle, 
   GraduationCap, Calendar as CalendarIcon, ChevronLeft, ArrowRight, RefreshCw 
 } from 'lucide-react';
-import { getSchoolYear } from '../utils/timehelper';
+import { getSchoolYear, getCurrentSemester } from '../utils/timehelper';
 
 const Roadmap = () => {
   // Sử dụng biến môi trường hoặc mặc định là localhost
@@ -24,13 +24,37 @@ const Roadmap = () => {
   const [activeSubject, setActiveSubject] = useState(null); // Môn học đang xem chi tiết
   const [generating, setGenerating] = useState(false); 
 
-  useEffect(() => {
+useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (!storedUser) return navigate('/login');
     const parsedUser = JSON.parse(storedUser);
     setUser(parsedUser);
-    fetchData(parsedUser._id, '1'); 
+    
+    // Get semester config and detect current semester
+    fetchSemesterConfig(parsedUser._id);
   }, [navigate]);
+
+  const fetchSemesterConfig = async (userId) => {
+    try {
+      const res = await axios.get(`${API_URL}/api/semester/${userId}`);
+      if (res.data.success) {
+        const config = {
+          '1': { start: res.data.data.semester1_start, end: res.data.data.semester1_end },
+          '2': { start: res.data.data.semester2_start, end: res.data.data.semester2_end },
+          'he': { start: res.data.data.semester_he_start, end: res.data.data.semester_he_end }
+        };
+        const current = getCurrentSemester(config);
+        setSelectedSemester(current);
+        fetchData(userId, current);
+      } else {
+        // Fallback to default semester 1
+        fetchData(userId, '1');
+      }
+    } catch (err) {
+      // Use default semester 1 if error
+      fetchData(userId, '1');
+    }
+  };
 
   const fetchData = async (userId, semester) => {
     setLoading(true);

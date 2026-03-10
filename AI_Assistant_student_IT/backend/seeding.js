@@ -16,6 +16,7 @@ const Subject = require('./models/Subject');
 const Timetable = require('./models/Timetable');
 const Roadmap = require('./models/Roadmap');
 const Semester = require('./models/Semester');
+const Exercise = require('./models/Exercise');
 
 // Hàm chạy seed dữ liệu
 const seedDB = async () => {
@@ -301,7 +302,7 @@ const seedDB = async () => {
     // ========================================
     // 8. TẠO DỮ LIỆU SEMESTER THEO USER (userID)
     // ========================================
-    const semesters = await Semester.create([
+const semesters = await Semester.create([
       // User 1 - Khoa
       {
         userId: studentUser1._id,
@@ -324,6 +325,63 @@ const seedDB = async () => {
       }
     ]);
     console.log("✅ Tạo dữ liệu Cấu hình học kỳ mẫu");
+
+    // ========================================
+    // 9. TẠO DỮ LIỆU EXERCISE MẪU (Bài tập chia sẻ)
+    // ========================================
+    const exercises = await Exercise.create([
+      // Programming exercises
+      {
+        subjectName: 'Cấu trúc dữ liệu và Giải thuật',
+        topicText: 'Thuật toán sắp xếp',
+        semester: '1',
+        subjectType: 'CODE',
+        mode: 'REVIEW',
+        data: {
+          type: 'CODE',
+          subjectType: 'CODE',
+          problem: 'Cho một mảng số nguyên, hãy sắp xếp mảng theo thứ tự tăng dần bằng thuật toán Quick Sort.',
+          level: 'Medium',
+          language: 'javascript',
+          starterCode: 'function quickSort(arr) {\n  // Viết code tại đây\n  return arr;\n}',
+          testCases: ['Input: [3, 6, 8, 10, 1, 2, 1]\nOutput: [1, 1, 2, 3, 6, 8, 10]', 'Input: [5, 4, 3, 2, 1]\nOutput: [1, 2, 3, 4, 5]']
+        }
+      },
+      {
+        subjectName: 'Cơ sở dữ liệu',
+        topicText: 'Câu truy vấn SQL cơ bản',
+        semester: '2',
+        subjectType: 'DATABASE',
+        mode: 'REVIEW',
+        data: {
+          type: 'CODE',
+          subjectType: 'DATABASE',
+          problem: 'Từ bảng Employees(id, name, salary, department_id), viết câu SQL để lấy danh sách nhân viên có lương trên 5000.',
+          level: 'Easy',
+          language: 'sql',
+          starterCode: '-- Viết câu SELECT để giải bài toán này\nSELECT ',
+          testCases: ['Table: Employees(id, name, salary, department_id)\nOutput: Tên nhân viên có lương > 5000']
+        }
+      },
+      // Quiz exercises
+      {
+        subjectName: 'Toán rời rạc',
+        topicText: 'Đại số Boole',
+        semester: '1',
+        subjectType: 'QUIZ',
+        mode: 'REVIEW',
+        data: {
+          type: 'QUIZ',
+          subjectType: 'QUIZ',
+          questions: [
+            { question: 'Phép toán AND trong đại số Boole tương ứng với phép toán nào trong tập hợp?', options: ['Hợp', 'Giao', 'Hiệu', 'Phần bù'], correctIndex: 1, explanation: 'Phép AND tương ứng với phép giao (∩) trong tập hợp.' },
+            { question: 'Phép toán OR trong đại số Boole tương ứng với phép toán nào?', options: ['Hợp', 'Giao', 'Hiệu', 'Phần bù'], correctIndex: 0, explanation: 'Phép OR tương ứng với phép hợp (∪) trong tập hợp.' },
+            { question: 'Luật De Morgan: (A AND B)\' bằng?', options: ['A\' OR B\'', 'A\' AND B\'', 'A OR B', 'A AND B'], correctIndex: 0, explanation: 'Theo luật De Morgan: (A ∧ B)\' = A\' ∨ B\'.' }
+          ]
+        }
+      }
+    ]);
+    console.log("✅ Tạo dữ liệu Bài tập mẫu");
 
     console.log("\n🎉 KHỞI TẠO DỮ LIỆU HOÀN TẤT!");
     console.log("===========================================");

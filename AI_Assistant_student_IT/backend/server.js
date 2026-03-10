@@ -20,6 +20,11 @@ const roadmapRoute = require('./routes/roadmap');
 app.use('/api/roadmap', roadmapRoute);
 const semesterRoute = require('./routes/semester');
 app.use('/api/semester', semesterRoute);
+
+const practiceRoute = require('./routes/practice');
+app.use('/api/practice', practiceRoute);
+const materialsRoute = require('./routes/materials');
+app.use('/api/materials', materialsRoute);
 // Lấy cổng và chuỗi kết nối từ file .env
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
