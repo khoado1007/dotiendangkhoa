@@ -9,7 +9,7 @@ import { getSchoolYear, getCurrentSemester } from '../utils/timehelper';
 
 const Roadmap = () => {
   // Sử dụng biến môi trường hoặc mặc định là localhost
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL ;
 
   const navigate = useNavigate();
   const [user, setUser] = useState(null);

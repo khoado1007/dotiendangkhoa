@@ -36,7 +36,7 @@ const getFallbackSemesterConfig = () => {
 
 const TimetableEntry = () => {
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL;
   const [user, setUser] = useState(null);
   const [timetables, setTimetables] = useState([]);
   

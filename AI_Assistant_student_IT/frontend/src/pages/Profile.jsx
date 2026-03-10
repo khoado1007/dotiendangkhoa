@@ -8,7 +8,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const API_URL = import.meta.env.VITE_API_URL ;
   const [formData, setFormData] = useState({
     fullName: '',
     dob: '',
@@ -32,7 +32,7 @@ const Profile = () => {
 
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/auth/student/${parsedUser._id}`);
+        const res = await axios.get(`${API_URL}/api/auth/student/${parsedUser._id}`);
         if (res.data.success && res.data.student) {
           const s = res.data.student;
           setFormData({
@@ -57,7 +57,7 @@ const Profile = () => {
     setError('');
     setSuccess('');
     try {
-      const res = await axios.put(`http://localhost:5000/api/auth/update-profile/${user._id}`, {
+      const res = await axios.put(`${API_URL}/api/auth/update-profile/${user._id}`, {
         fullName: formData.fullName,
         dob: formData.dob,
         school: formData.school,

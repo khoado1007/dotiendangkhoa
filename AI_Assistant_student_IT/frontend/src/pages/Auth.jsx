@@ -24,7 +24,7 @@ import { Lock, User as UserIcon, Mail } from 'lucide-react';
 
 const Auth = () => {
   // Sử dụng biến môi trường hoặc mặc định là localhost
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true); // Toggle Đăng nhập / Đăng ký

@@ -18,7 +18,7 @@ const Admin = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const apiUrl = import.meta.env.VITE_API_URL ;
         const response = await axios.get(`${apiUrl}/api/admin/dashboard-stats`);
         
         if (response.data.success) {

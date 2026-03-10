@@ -5,7 +5,7 @@ import { User, Calendar, BookOpen, GraduationCap, Building, Clock, Coffee, Searc
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL;
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '', dob: '', school: '', major: '', enrollmentYear: new Date().getFullYear()

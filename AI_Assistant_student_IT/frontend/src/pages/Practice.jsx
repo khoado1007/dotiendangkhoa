@@ -14,7 +14,7 @@ import { getCurrentSemester, getSchoolYear } from '../utils/timehelper';
 const Practice = () => {
   const navigate = useNavigate();
   const { mode: urlMode } = useParams(); // Nhận 'review' hoặc 'exam' từ URL
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL ;
   const [user, setUser] = useState(null);
   
   const [selectedSemester, setSelectedSemester] = useState('1');

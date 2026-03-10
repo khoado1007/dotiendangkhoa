@@ -119,7 +119,7 @@ const Home = () => {
 
 const fetchData = async (userId) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL ;
       const [profileRes, timetableRes, semesterRes, settingsRes] = await Promise.all([
         axios.get(`${apiUrl}/api/auth/student/${userId}`),
         axios.get(`${apiUrl}/api/timetable/${userId}`),
@@ -250,7 +250,7 @@ const fetchData = async (userId) => {
 
   const handleSaveNote = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL ;
       const payload = {
         isNote: true, noteContent: noteModal.content, session: noteModal.session, 
         dayOfWeek: noteModal.day, startPeriod: noteModal.startPeriod, numberOfPeriods: 1, 
