@@ -10,7 +10,11 @@ const app = express();
 
 // Middleware giúp xử lý dữ liệu JSON và cho phép gọi API chéo miền
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: 'https://dotiendangkhoa-1.onrender.com',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true 
+}));
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes); // Tất cả API của admin sẽ bắt đầu bằng /api/admin
 const authRoutes = require('./routes/auth');
